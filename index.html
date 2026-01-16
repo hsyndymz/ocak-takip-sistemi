@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ocak Takip Navigasyon v4</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; height: 100vh; display: flex; flex-direction: column; }
+        .header { background: #1a73e8; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .main { display: flex; flex: 1; overflow: hidden; }
+        .sidebar { width: 350px; background: white; border-right: 1px solid #ddd; overflow-y: auto; display: flex; flex-direction: column; }
+        .map-area { flex: 1; background: #e5e3df; position: relative; }
+        .ocak-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; transition: 0.2s; }
+        .ocak-item:hover { background: #f8f9fa; border-left: 4px solid #1a73e8; }
+        .ocak-item.active { background: #e8f0fe; border-left: 4px solid #1a73e8; }
+        .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-green { background: #1e8e3e; color: white; }
+        .btn-white { background: white; color: #1a73e8; }
+        .admin-badge { background: #d93025; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        function App() {
+            const [role, setRole] = useState('GUEST');
+            const [selectedOcak, setSelectedOcak] = useState(null);
+            const [ocaklar, setOcaklar] = useState([
+                { id: 1, name: 'ARSİM KALKER OCAĞI', lat: 38.2765, lng: 40.0615, detay: 'Diyarbakır - Hani yolu üzeri' },
+                { id: 2, name: 'KARAŞİN BAZALT OCAĞI', lat: 38.0523, lng: 40.0758, detay: 'Kocaköy Mevkii' },
+                { id: 3, name: 'ÇAYIRLI KALKER OCAĞI', lat: 37.3495, lng: 41.4358, detay: 'Midyat Çevre Yolu' },
+                { id: 4, name: 'SULAKLI TOPLAMA BAZALT', lat: 37.8179, lng: 40.5219, detay: 'Merkez Sulaklı Köyü' }
+            ]);
+
+            const handleLogin = () => {
+                const pass = prompt("Yönetici Şifresi (1234):");
+                if (pass === "1234") setRole('ADMIN');
+                else alert("Hatalı şifre!");
+            };
+
+            const addOcak = () => {
+                if (role !== 'ADMIN') return;
+                const name = prompt("Ocak Adı:");
+                const lat = prompt("Enlem (Örn: 38.123):");
+                const lng = prompt("Boylam (Örn: 40.123):");
+                if (name && lat && lng) {
+                    setOcaklar([...ocaklar, { id: Date.now(), name, lat: Number(lat), lng: Number(lng), detay: 'Manuel Eklendi' }]);
+                }
+            };
+
+            return (
+                <div style={{display: 'flex', flexDirection: 'column', height: '100vh'}}>
+                    <div className="header">
+                        <h2 style={{margin:0}}>📍 Ocak Takip Sistemi {role === 'ADMIN' && <span className="admin-badge">ADMIN</span>}</h2>
+                        <div>
+                            {role === 'ADMIN' && <button className="btn btn-white" style={{marginRight: '10px'}} onClick={addOcak}>+ Ocak Ekle</button>}
+                            {role === 'GUEST' ? <button className="btn btn-white" onClick={handleLogin}>Yönetici Girişi</button> : <button className="btn btn-white" onClick={() => setRole('GUEST')}>Çıkış Yap</button>}
+                        </div>
+                    </div>
+
+                    <div className="main">
+                        <div className="sidebar">
+                            <div style={{padding: '15px', borderBottom: '1px solid #ddd', background: '#f8f9fa'}}>
+                                <strong>Mevcut Ocaklar ({ocaklar.length})</strong>
+                            </div>
+                            {ocaklar.map(o => (
+                                <div key={o.id} className={`ocak-item ${selectedOcak?.id === o.id ? 'active' : ''}`} onClick={() => setSelectedOcak(o)}>
+                                    <div style={{fontWeight: 'bold'}}>{o.name}</div>
+                                    <div style={{fontSize: '12px', color: '#666'}}>{o.lat}, {o.lng}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="map-area">
+                            <iframe 
+                                src={selectedOcak ? `https://maps.google.com/maps?q=${selectedOcak.lat},${selectedOcak.lng}&z=14&output=embed` : `https://maps.google.com/maps?q=38.0,40.0&z=8&output=embed`}
+                                width="100%" height="100%" style={{border: 0}} allowFullScreen>
+                            </iframe>
+                            
+                            {selectedOcak && (
+                                <div style={{position: 'absolute', bottom: '20px', left: '20px', right: '20px', background: 'white', padding: '15px', borderRadius: '8px', boxShadow: '0 4px 15px rgba(0,0,0,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                                    <div>
+                                        <h3 style={{margin: '0 0 5px 0'}}>{selectedOcak.name}</h3>
+                                        <p style={{margin: 0, fontSize: '13px', color: '#666'}}>{selectedOcak.detay}</p>
+                                    </div>
+                                    <button className="btn btn-green" onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${selectedOcak.lat},${selectedOcak.lng}`)}>Yol Tarifi Al</button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
