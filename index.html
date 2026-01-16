@@ -3,58 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ocak Takip Pro | Enterprise</title>
+    <title>Ocak Takip Sistemi | Kurumsal</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --p: #2563eb; --dk: #0f172a; --bg: #f8fafc; --sidebar: #ffffff; }
+        :root { --primary: #2563eb; --dark: #0f172a; --gray: #64748b; }
         * { box-sizing: border-box; font-family: 'Outfit', sans-serif; }
-        body { margin: 0; background: var(--bg); color: var(--dk); height: 100vh; overflow: hidden; }
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #f8fafc; }
         
-        /* Dashboard Layout */
-        .wrapper { display: flex; flex-direction: column; height: 100vh; }
-        .nav { height: 70px; background: var(--dk); color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; border-bottom: 4px solid var(--p); }
-        .main { display: flex; flex: 1; overflow: hidden; }
+        /* Dashboard Yapısı */
+        .app-container { display: flex; flex-direction: column; height: 100vh; }
+        .top-nav { height: 70px; background: var(--dark); color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 25px; border-bottom: 4px solid var(--primary); z-index: 1000; }
+        .main-content { display: flex; flex: 1; overflow: hidden; }
         
-        /* Sol Panel (Sidebar) */
-        .sidebar { width: 420px; background: var(--sidebar); border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; box-shadow: 10px 0 30px rgba(0,0,0,0.02); }
-        .sb-head { padding: 25px; border-bottom: 1px solid #f1f5f9; }
-        .search-in { width: 100%; padding: 14px 20px; border-radius: 12px; border: 2px solid #f1f5f9; background: #f8fafc; font-size: 15px; outline: none; transition: 0.3s; }
-        .search-in:focus { border-color: var(--p); background: #fff; box-shadow: 0 4px 12px rgba(37,99,235,0.1); }
+        /* Sol Menü */
+        .sidebar { width: 380px; background: white; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.05); }
+        .sidebar-search { padding: 20px; border-bottom: 1px solid #f1f5f9; }
+        .search-field { width: 100%; padding: 12px 15px; border-radius: 10px; border: 2px solid #f1f5f9; background: #f8fafc; outline: none; }
+        .search-field:focus { border-color: var(--primary); background: white; }
         
-        /* Ocak Kartları */
-        .o-list { flex: 1; overflow-y: auto; padding: 15px; }
-        .o-card { padding: 20px; border-radius: 16px; margin-bottom: 12px; cursor: pointer; transition: 0.3s; border: 1px solid #f1f5f9; background: #fff; }
-        .o-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.05); }
-        .o-card.active { border-color: var(--p); background: #eff6ff; }
-        .o-card h4 { margin: 0 0 6px 0; font-size: 16px; color: var(--dk); display: flex; justify-content: space-between; align-items: center; }
-        .badge { font-size: 10px; padding: 4px 8px; border-radius: 6px; background: #dcfce7; color: #166534; font-weight: 700; }
+        .ocak-list { flex: 1; overflow-y: auto; padding: 10px; }
+        .ocak-card { padding: 18px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; border: 1px solid #f1f5f9; transition: 0.2s; position: relative; }
+        .ocak-card:hover { background: #f1f5f9; transform: translateY(-2px); }
+        .ocak-card.active { border-color: var(--primary); background: #eff6ff; }
+        .ocak-card h4 { margin: 0 0 5px 0; color: var(--dark); font-size: 15px; }
         
         /* Harita Alanı */
-        .view { flex: 1; position: relative; }
-        .map-box { width: 100%; height: 100%; border: none; }
-        
-        /* Detay Paneli (SaaS Style) */
-        .info-pop { 
-            position: absolute; bottom: 30px; left: 30px; right: 30px; 
-            background: rgba(255,255,255,0.94); backdrop-filter: blur(20px); 
-            border-radius: 24px; padding: 30px; box-shadow: 0 20px 50px rgba(15,23,42,0.15);
-            display: flex; gap: 40px; border: 1px solid rgba(255,255,255,0.4);
-            animation: pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        .map-viewport { flex: 1; position: relative; background: #cbd5e1; }
+        .map-iframe { width: 100%; height: 100%; border: none; }
+
+        /* Modern Bilgi Paneli */
+        .info-panel { 
+            position: absolute; bottom: 25px; left: 25px; right: 25px; 
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); 
+            border-radius: 20px; padding: 25px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid rgba(255,255,255,0.3);
+            animation: slideUp 0.5s ease;
         }
-        @keyframes pop { from { opacity: 0; transform: scale(0.9) translateY(40px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Butonlar */
-        .btn { padding: 12px 24px; border-radius: 12px; font-weight: 700; cursor: pointer; border: none; transition: 0.2s; font-size: 14px; }
-        .btn-p { background: var(--p); color: white; box-shadow: 0 10px 20px rgba(37,99,235,0.2); }
-        .btn-p:hover { background: #1d4ed8; transform: translateY(-2px); }
-        .btn-s { background: white; color: var(--dk); border: 2px solid #e2e8f0; }
-        
-        /* Yetki Engeli */
-        .lock-blur { filter: blur(8px); pointer-events: none; opacity: 0.5; user-select: none; }
-        .lock-msg { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; background: rgba(255,255,255,0.1); border-radius: 20px; }
+        .btn { padding: 12px 24px; border-radius: 10px; font-weight: 700; cursor: pointer; border: none; transition: 0.2s; }
+        .btn-p { background: var(--primary); color: white; }
+        .btn-p:hover { background: #1d4ed8; }
+        .btn-s { background: #f1f5f9; color: var(--dark); border: 1px solid #e2e8f0; }
+
+        /* Kısıtlama Maskesi */
+        .restricted { filter: blur(6px); pointer-events: none; opacity: 0.4; }
+        .lock-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5; }
     </style>
 </head>
 <body>
@@ -68,7 +67,86 @@
             const [selected, setSelected] = useState(null);
             
             const ocaklar = [
-                { id: 1, name: 'ARSİM KALKER OCAĞI', lat: 38.2765, lng: 40.0615, ruhsat: '2023001-A', kap: '1.5M Ton', yetkili: 'Ömer Aksoy' },
-                { id: 2, name: 'KARAŞİN BAZALT OCAĞI', lat: 38.0523, lng: 40.0758, ruhsat: '2024042-B', kap: '900K Ton', yetkili: 'Caner Aydın' },
-                { id: 3, name: 'ÇAYIRLI KALKER OCAĞI', lat: 37.3495, lng: 41.4358, ruhsat: '2022005-C', kap: '2.1M Ton', yetkili: 'Hakan Kaya' },
-                { id: 4, name: 'SULAKLI TOPLAMA
+                { id: 1, name: 'ARSİM KALKER OCAĞI', lat: 38.2765, lng: 40.0615, ruhsat: '2023-RS-01', kap: '1.200.000 Ton/Yıl', personel: 'Ahmet Karadağ' },
+                { id: 2, name: 'KARAŞİN BAZALT OCAĞI', lat: 38.0523, lng: 40.0758, ruhsat: '2024-BS-42', kap: '850.000 Ton/Yıl', personel: 'Süleyman Demir' },
+                { id: 3, name: 'ÇAYIRLI KALKER OCAĞI', lat: 37.3495, lng: 41.4358, ruhsat: '2022-KL-05', kap: '2.000.000 Ton/Yıl', personel: 'Hüseyin Aksoy' },
+                { id: 4, name: 'SULAKLI TOPLAMA BAZALT', lat: 37.8179, lng: 40.5219, ruhsat: '2025-SZ-99', kap: '450.000 Ton/Yıl', personel: 'Mehmet Aydın' }
+            ];
+
+            const handleLogin = () => {
+                const pass = prompt("Sistem Şifresi (1234):");
+                if(pass === "1234") setRole('ADMIN');
+                else if(pass) alert("Hatalı Giriş!");
+            };
+
+            return (
+                <div className="app-container">
+                    <nav className="top-nav">
+                        <div style={{fontSize: '20px', fontWeight: 800}}>📍 OCAK PORTAL <span style={{fontWeight:300, fontSize:'14px', color:'#94a3b8'}}>PRO v8</span></div>
+                        <div style={{display:'flex', gap:'15px', alignItems:'center'}}>
+                            <span style={{fontSize:'12px', fontWeight:600}}>{role === 'ADMIN' ? '🔓 YÖNETİCİ' : '🔒 ZİYARETÇİ'}</span>
+                            {role === 'GUEST' ? 
+                                <button className="btn btn-p" onClick={handleLogin}>Sisteme Giriş</button> :
+                                <button className="btn btn-s" onClick={() => setRole('GUEST')}>Güvenli Çıkış</button>
+                            }
+                        </div>
+                    </nav>
+
+                    <div className="main-content">
+                        <aside className="sidebar">
+                            <div className="sidebar-search">
+                                <input type="text" className="search-field" placeholder="Ocak adı ile ara..." />
+                            </div>
+                            <div className="ocak-list">
+                                {ocaklar.map(o => (
+                                    <div key={o.id} className={`ocak-card ${selected?.id === o.id ? 'active' : ''}`} onClick={() => setSelected(o)}>
+                                        <h4>{o.name}</h4>
+                                        <div style={{fontSize:'12px', color: '#64748b'}}>Koordinat: {o.lat.toFixed(3)}, {o.lng.toFixed(3)}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </aside>
+
+                        <div className="map-viewport">
+                            <iframe 
+                                className="map-iframe"
+                                src={selected ? 
+                                    `https://maps.google.com/maps?q=${selected.lat},${selected.lng}&z=15&t=k&output=embed` : 
+                                    `https://maps.google.com/maps?q=38.0,40.0&z=8&output=embed`}
+                            ></iframe>
+
+                            {selected && (
+                                <div className="info-panel">
+                                    <div style={{flex:1, position:'relative'}}>
+                                        <h2 style={{margin:'0 0 15px 0', fontSize:'24px', letterSpacing:'-1px'}}>{selected.name}</h2>
+                                        
+                                        <div style={{position:'relative'}}>
+                                            {role === 'GUEST' && (
+                                                <div className="lock-overlay">
+                                                    <span style={{fontSize:'20px'}}>🔒</span>
+                                                    <div style={{fontWeight:700, color:'#ef4444', fontSize:'12px'}}>YETKİ GEREKLİ</div>
+                                                </div>
+                                            )}
+                                            <div className={`data-grid ${role === 'GUEST' ? 'restricted' : ''}`} style={{display:'flex', gap:'30px'}}>
+                                                <div><small style={{color:'#64748b'}}>RUHSAT</small><div style={{fontWeight:700}}>{selected.ruhsat}</div></div>
+                                                <div><small style={{color:'#64748b'}}>KAPASİTE</small><div style={{fontWeight:700}}>{selected.kap}</div></div>
+                                                <div><small style={{color:'#64748b'}}>SORUMLU</small><div style={{fontWeight:700}}>{selected.personel}</div></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button className="btn btn-p" onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${selected.lat},${selected.lng}`)}>
+                                        Navigasyonu Başlat
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
