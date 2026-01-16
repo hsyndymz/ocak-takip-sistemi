@@ -3,69 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ocak Takip Pro | Enterprise Dashboard</title>
+    <title>Ocak Takip Pro | Enterprise</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #2563eb;
-            --secondary: #64748b;
-            --dark: #0f172a;
-            --danger: #ef4444;
-            --bg: #f8fafc;
-            --card-bg: #ffffff;
-        }
-        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { margin: 0; background: var(--bg); color: var(--dark); height: 100vh; overflow: hidden; }
+        :root { --p: #2563eb; --dk: #0f172a; --bg: #f8fafc; --sidebar: #ffffff; }
+        * { box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--dk); height: 100vh; overflow: hidden; }
         
-        /* Navbar */
-        .navbar { height: 64px; background: var(--dark); color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .logo { font-weight: 700; font-size: 20px; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px; }
-        .logo span { color: var(--primary); }
-
-        /* Ana Layout */
-        .layout { display: flex; height: calc(100vh - 64px); }
+        /* Dashboard Layout */
+        .wrapper { display: flex; flex-direction: column; height: 100vh; }
+        .nav { height: 70px; background: var(--dk); color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; border-bottom: 4px solid var(--p); }
+        .main { display: flex; flex: 1; overflow: hidden; }
         
-        /* Sidebar */
-        .sidebar { width: 380px; background: var(--card-bg); border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; }
-        .sidebar-header { padding: 20px; border-bottom: 1px solid #f1f5f9; }
-        .search-container { position: relative; }
-        .search-input { width: 100%; padding: 12px 16px; border-radius: 10px; border: 1px solid #e2e8f0; background: #f1f5f9; outline: none; transition: 0.3s; }
-        .search-input:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        /* Sol Panel (Sidebar) */
+        .sidebar { width: 420px; background: var(--sidebar); border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; box-shadow: 10px 0 30px rgba(0,0,0,0.02); }
+        .sb-head { padding: 25px; border-bottom: 1px solid #f1f5f9; }
+        .search-in { width: 100%; padding: 14px 20px; border-radius: 12px; border: 2px solid #f1f5f9; background: #f8fafc; font-size: 15px; outline: none; transition: 0.3s; }
+        .search-in:focus { border-color: var(--p); background: #fff; box-shadow: 0 4px 12px rgba(37,99,235,0.1); }
         
         /* Ocak Kartları */
-        .ocak-list { flex: 1; overflow-y: auto; padding: 10px; }
-        .ocak-card { padding: 16px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; position: relative; }
-        .ocak-card:hover { background: #f8fafc; border-color: #e2e8f0; }
-        .ocak-card.active { background: #eff6ff; border-color: var(--primary); }
-        .ocak-card-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; display: flex; justify-content: space-between; }
-        .ocak-card-sub { font-size: 12px; color: var(--secondary); }
-        .status-pill { padding: 2px 8px; border-radius: 20px; font-size: 10px; background: #dcfce7; color: #166534; }
-
-        /* Harita ve Detay */
-        .viewport { flex: 1; position: relative; background: #cbd5e1; }
-        .map-frame { width: 100%; height: 100%; border: none; }
+        .o-list { flex: 1; overflow-y: auto; padding: 15px; }
+        .o-card { padding: 20px; border-radius: 16px; margin-bottom: 12px; cursor: pointer; transition: 0.3s; border: 1px solid #f1f5f9; background: #fff; }
+        .o-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.05); }
+        .o-card.active { border-color: var(--p); background: #eff6ff; }
+        .o-card h4 { margin: 0 0 6px 0; font-size: 16px; color: var(--dk); display: flex; justify-content: space-between; align-items: center; }
+        .badge { font-size: 10px; padding: 4px 8px; border-radius: 6px; background: #dcfce7; color: #166534; font-weight: 700; }
         
-        .floating-panel { 
-            position: absolute; bottom: 24px; left: 24px; right: 24px; 
-            background: rgba(255,255,255,0.9); backdrop-filter: blur(12px); 
-            border-radius: 16px; padding: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-            display: flex; gap: 24px; border: 1px solid rgba(255,255,255,0.5);
-            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        /* Harita Alanı */
+        .view { flex: 1; position: relative; }
+        .map-box { width: 100%; height: 100%; border: none; }
+        
+        /* Detay Paneli (SaaS Style) */
+        .info-pop { 
+            position: absolute; bottom: 30px; left: 30px; right: 30px; 
+            background: rgba(255,255,255,0.94); backdrop-filter: blur(20px); 
+            border-radius: 24px; padding: 30px; box-shadow: 0 20px 50px rgba(15,23,42,0.15);
+            display: flex; gap: 40px; border: 1px solid rgba(255,255,255,0.4);
+            animation: pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        @keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes pop { from { opacity: 0; transform: scale(0.9) translateY(40px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 
         /* Butonlar */
-        .btn { padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; border: none; display: flex; align-items: center; gap: 6px; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: #1d4ed8; }
-        .btn-ghost { background: transparent; border: 1px solid #e2e8f0; color: var(--dark); }
-        .btn-ghost:hover { background: #f1f5f9; }
-
-        .blur-content { filter: blur(5px); pointer-events: none; opacity: 0.6; }
-        .auth-notice { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.2); z-index: 5; font-weight: 600; color: var(--danger); text-shadow: 0 0 10px white; }
+        .btn { padding: 12px 24px; border-radius: 12px; font-weight: 700; cursor: pointer; border: none; transition: 0.2s; font-size: 14px; }
+        .btn-p { background: var(--p); color: white; box-shadow: 0 10px 20px rgba(37,99,235,0.2); }
+        .btn-p:hover { background: #1d4ed8; transform: translateY(-2px); }
+        .btn-s { background: white; color: var(--dk); border: 2px solid #e2e8f0; }
+        
+        /* Yetki Engeli */
+        .lock-blur { filter: blur(8px); pointer-events: none; opacity: 0.5; user-select: none; }
+        .lock-msg { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; background: rgba(255,255,255,0.1); border-radius: 20px; }
     </style>
 </head>
 <body>
@@ -75,100 +64,11 @@
         const { useState } = React;
 
         function App() {
-            const [role, setRole] = useState('GUEST'); // GUEST, ADMIN
+            const [role, setRole] = useState('GUEST');
             const [selected, setSelected] = useState(null);
             
             const ocaklar = [
-                { id: 1, name: 'ARSİM KALKER OCAĞI', lat: 38.2765, lng: 40.0615, ilce: 'Hani', kapasite: '1.2M Ton', ruhsat: '2023-A42', sorumlu: 'Ahmet Karadağ' },
-                { id: 2, name: 'KARAŞİN BAZALT OCAĞI', lat: 38.0523, lng: 40.0758, ilce: 'Kocaköy', kapasite: '850K Ton', ruhsat: '2024-B12', sorumlu: 'Veli Can' },
-                { id: 3, name: 'ÇAYIRLI KALKER OCAĞI', lat: 37.3495, lng: 41.4358, ilce: 'Midyat', kapasite: '2M Ton', ruhsat: '2022-C05', sorumlu: 'Hüseyin Demir' }
-            ];
-
-            const handleLogin = () => {
-                const pass = prompt("Yönetici Şifresi (1234):");
-                if(pass === "1234") setRole('ADMIN');
-            };
-
-            return (
-                <div className="app-wrapper">
-                    <nav className="navbar">
-                        <div className="logo">📍 OCAK<span>PORTAL</span></div>
-                        <div style={{display:'flex', gap:'12px', alignItems:'center'}}>
-                            <span style={{fontSize:'13px', color:'#94a3b8'}}>{role === 'ADMIN' ? '⚡ Yönetici Erişimi' : '👤 Ziyaretçi'}</span>
-                            {role === 'GUEST' ? 
-                                <button className="btn btn-primary" onClick={handleLogin}>Sisteme Giriş</button> :
-                                <button className="btn btn-ghost" style={{color:'white', borderColor:'#334155'}} onClick={() => setRole('GUEST')}>Çıkış Yap</button>
-                            }
-                        </div>
-                    </nav>
-
-                    <div className="layout">
-                        <aside className="sidebar">
-                            <div className="sidebar-header">
-                                <div className="search-container">
-                                    <input type="text" className="search-input" placeholder="Ocak adı veya bölge ara..." />
-                                </div>
-                            </div>
-                            <div className="ocak-list">
-                                {ocaklar.map(o => (
-                                    <div key={o.id} className={`ocak-card ${selected?.id === o.id ? 'active' : ''}`} onClick={() => setSelected(o)}>
-                                        <div className="ocak-card-title">
-                                            {o.name}
-                                            <span className="status-pill">Aktif</span>
-                                        </div>
-                                        <div className="ocak-card-sub">📍 {o.ilce} / Bölge {o.id}</div>
-                                    </div>
-                                ))}
-                            </div>
-                        </aside>
-
-                        <main className="viewport">
-                            <iframe 
-                                className="map-frame"
-                                src={selected ? `https://maps.google.com/maps?q=${selected.lat},${selected.lng}&z=15&maptype=satellite&output=embed` : `https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d3125244.174246187!2d35.243322!3d38.963745!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1str!2str!4v17000000000008`}
-                                allowFullScreen
-                            ></iframe>
-
-                            {selected && (
-                                <div className="floating-panel">
-                                    <div style={{flex:1}}>
-                                        <div style={{fontSize:'12px', color:var(--primary), fontWeight:700, marginBottom:'4px'}}>OCAK DETAY BİLGİSİ</div>
-                                        <h2 style={{margin:'0 0 12px 0', letterSpacing:'-0.5px'}}>{selected.name}</h2>
-                                        
-                                        <div style={{position:'relative'}}>
-                                            {role === 'GUEST' && <div className="auth-notice">Detaylar için yönetici girişi gerekli</div>}
-                                            <div className={`info-row ${role === 'GUEST' ? 'blur-content' : ''}`} style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'20px'}}>
-                                                <div>
-                                                    <div style={{fontSize:'11px', color:'#64748b'}}>RUHSAT NO</div>
-                                                    <div style={{fontWeight:600}}>{selected.ruhsat}</div>
-                                                </div>
-                                                <div>
-                                                    <div style={{fontSize:'11px', color:'#64748b'}}>KAPASİTE</div>
-                                                    <div style={{fontWeight:600}}>{selected.kapasite}</div>
-                                                </div>
-                                                <div>
-                                                    <div style={{fontSize:'11px', color:'#64748b'}}>SORUMLU</div>
-                                                    <div style={{fontWeight:600}}>{selected.sorumlu}</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div style={{display:'flex', flexDirection:'column', justifyContent:'center', gap:'10px'}}>
-                                        <button className="btn btn-primary" onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${selected.lat},${selected.lng}`)}>
-                                            Navigasyonu Başlat
-                                        </button>
-                                        <button className="btn btn-ghost">Rapor İndir</button>
-                                    </div>
-                                </div>
-                            )}
-                        </main>
-                    </div>
-                </div>
-            );
-        }
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-</html>
+                { id: 1, name: 'ARSİM KALKER OCAĞI', lat: 38.2765, lng: 40.0615, ruhsat: '2023001-A', kap: '1.5M Ton', yetkili: 'Ömer Aksoy' },
+                { id: 2, name: 'KARAŞİN BAZALT OCAĞI', lat: 38.0523, lng: 40.0758, ruhsat: '2024042-B', kap: '900K Ton', yetkili: 'Caner Aydın' },
+                { id: 3, name: 'ÇAYIRLI KALKER OCAĞI', lat: 37.3495, lng: 41.4358, ruhsat: '2022005-C', kap: '2.1M Ton', yetkili: 'Hakan Kaya' },
+                { id: 4, name: 'SULAKLI TOPLAMA
