@@ -3,126 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ocak Takip Pro v4.5</title>
+    <title>Kurumsal Ocak Takip Portalı</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
-        :root { --primary: #1a73e8; --dark: #202124; --bg: #f8f9fa; }
-        body { margin: 0; font-family: 'Segoe UI', Tahoma, sans-serif; height: 100vh; display: flex; flex-direction: column; background: var(--bg); }
-        .navbar { background: var(--dark); color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 100; }
-        .main-container { display: flex; flex: 1; overflow: hidden; }
-        .sidebar { width: 380px; background: white; border-right: 1px solid #dadce0; display: flex; flex-direction: column; }
-        .search-box { padding: 15px; border-bottom: 1px solid #eee; }
-        .search-box input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 20px; outline: none; }
-        .ocak-list { flex: 1; overflow-y: auto; }
-        .ocak-item { padding: 15px; border-bottom: 1px solid #f1f3f4; cursor: pointer; transition: 0.2s; }
-        .ocak-item:hover { background: #f1f3f4; }
-        .ocak-item.active { background: #e8f0fe; border-left: 5px solid var(--primary); }
-        .map-view { flex: 1; position: relative; }
-        .btn { padding: 8px 16px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-outline { background: transparent; border: 1px solid white; color: white; }
-        .details-panel { position: absolute; bottom: 20px; left: 20px; right: 20px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: flex; justify-content: space-between; align-items: center; z-index: 10; animation: slideUp 0.3s ease; }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        :root { --admin: #d93025; --user: #1a73e8; --guest: #5f6368; --bg: #f1f3f4; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; height: 100vh; background: var(--bg); overflow: hidden; }
+        .app-wrapper { display: flex; flex-direction: column; height: 100vh; }
+        
+        /* Navbar */
+        .nav { background: #fff; padding: 10px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #dadce0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .user-info { display: flex; align-items: center; gap: 15px; }
+        .role-tag { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+        
+        /* Layout */
+        .content { display: flex; flex: 1; overflow: hidden; }
+        .sidebar { width: 400px; background: #fff; border-right: 1px solid #dadce0; display: flex; flex-direction: column; }
+        .main-view { flex: 1; position: relative; background: #e5e3df; }
+        
+        /* Sidebar Components */
+        .list-header { padding: 20px; background: #f8f9fa; border-bottom: 1px solid #eee; }
+        .ocak-item { padding: 15px 20px; border-bottom: 1px solid #f1f3f4; cursor: pointer; transition: 0.3s; position: relative; }
+        .ocak-item:hover { background: #f8f9fa; }
+        .ocak-item.active { background: #e8f0fe; border-left: 4px solid var(--user); }
+        .lock-icon { font-size: 12px; color: #9aa0a6; margin-left: 5px; }
+
+        /* Detail Panel */
+        .detail-overlay { position: absolute; top: 20px; right: 20px; width: 350px; background: rgba(255,255,255,0.95); backdrop-filter: blur(5px); border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); padding: 20px; z-index: 100; border: 1px solid rgba(0,0,0,0.05); }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; font-size: 13px; }
+        .info-label { color: #70757a; font-weight: 500; }
+        
+        /* Buttons */
+        .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .btn-login { background: var(--user); color: white; }
+        .btn-admin { background: var(--admin); color: white; }
+        
+        .restricted { filter: blur(4px); pointer-events: none; user-select: none; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState } = React;
 
         function App() {
-            const [role, setRole] = useState('GUEST'); // GUEST, USER, ADMIN
-            const [selected, setSelected] = useState(null);
-            const [search, setSearch] = useState('');
+            const [currentUser, setCurrentUser] = useState({ role: 'GUEST', name: 'Ziyaretçi' });
+            const [selectedOcak, setSelectedOcak] = useState(null);
             
-            // KML'den gelen gerçek veriler
-            const [ocaklar, setOcaklar] = useState([
-                { id: 1, name: 'ARSİM KALKER OCAĞI', lat: 38.2765, lng: 40.0615, detay: 'Hani Bölgesi - Aktif Ruhsat' },
-                { id: 2, name: 'KARAŞİN BAZALT OCAĞI', lat: 38.0523, lng: 40.0758, detay: 'Kocaköy Mevkii - İşletme Safhası' },
-                { id: 3, name: 'ÇAYIRLI KALKER OCAĞI', lat: 37.3495, lng: 41.4358, detay: 'Midyat Çevre Yolu Üzeri' },
-                { id: 4, name: 'SULAKLI TOPLAMA BAZALT', lat: 37.8179, lng: 40.5219, detay: 'Merkez Sulaklı Köyü' },
-                { id: 5, name: 'EMTAŞ K.T. OCAĞI', lat: 37.1433, lng: 41.4450, detay: 'Güneydoğu İşletme Grubu' }
+            // Veritabanı simülasyonu
+            const [ocaklar] = useState([
+                { 
+                    id: 1, name: 'ARSİM KALKER OCAĞI', lat: 38.2765, lng: 40.0615, 
+                    secret: { ruhsat: '2023001', kapasite: '500.000 Ton/Yıl', bitis: '15.06.2028', yetkili: 'Ahmet Yılmaz' }
+                },
+                { 
+                    id: 2, name: 'KARAŞİN BAZALT OCAĞI', lat: 38.0523, lng: 40.0758, 
+                    secret: { ruhsat: '2024042', kapasite: '250.000 Ton/Yıl', bitis: '20.12.2030', yetkili: 'Mehmet Demir' }
+                }
             ]);
 
-            const handleLogin = () => {
-                const pass = prompt("Yönetici Şifresi (1234):");
-                if (pass === "1234") setRole('ADMIN');
-                else if (pass === "user") setRole('USER');
+            const login = (role) => {
+                const user = prompt("Kullanıcı Adı:");
+                const pass = prompt("Şifre:");
+                if(pass === "1234") {
+                    setCurrentUser({ role: role, name: user });
+                    alert(`${role} Girişi Başarılı!`);
+                } else {
+                    alert("Hatalı Giriş!");
+                }
             };
 
-            const filteredOcaklar = ocaklar.filter(o => o.name.toLowerCase().includes(search.toLowerCase()));
-
             return (
-                <div style={{display:'flex', flexDirection:'column', height:'100vh'}}>
-                    <div className="navbar">
+                <div className="app-wrapper">
+                    <nav className="nav">
                         <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
-                            <span style={{fontSize:'20px'}}>📍</span>
-                            <h2 style={{margin:0, fontSize:'18px'}}>Ocak Takip Navigasyon PRO</h2>
+                            <div style={{width:'32px', height:'32px', background:currentUser.role === 'ADMIN' ? 'var(--admin)' : 'var(--user)', borderRadius:'8px'}}></div>
+                            <h2 style={{margin:0, fontSize:'18px', letterSpacing:'-0.5px'}}>OCAK PORTAL <span style={{fontWeight:300}}>v5.0</span></h2>
                         </div>
-                        <div style={{display:'flex', gap:'10px'}}>
-                            {role === 'ADMIN' && <button className="btn btn-outline" onClick={() => alert("Kullanıcı Yönetimi Açıldı")}>Kullanıcılar</button>}
-                            {role === 'GUEST' ? 
-                                <button className="btn btn-primary" onClick={handleLogin}>Giriş Yap</button> : 
-                                <button className="btn btn-outline" onClick={() => setRole('GUEST')}>Çıkış ({role})</button>
-                            }
+                        
+                        <div className="user-info">
+                            <span className="role-tag" style={{
+                                background: currentUser.role === 'ADMIN' ? '#fce8e6' : '#e8f0fe',
+                                color: currentUser.role === 'ADMIN' ? 'var(--admin)' : 'var(--user)'
+                            }}>
+                                {currentUser.role}
+                            </span>
+                            <strong>{currentUser.name}</strong>
+                            {currentUser.role === 'GUEST' ? (
+                                <div style={{display:'flex', gap:'5px'}}>
+                                    <button className="btn btn-login" onClick={() => login('USER')}>Personel Girişi</button>
+                                    <button className="btn btn-admin" onClick={() => login('ADMIN')}>Yönetici</button>
+                                </div>
+                            ) : (
+                                <button className="btn" onClick={() => setCurrentUser({role:'GUEST', name:'Ziyaretçi'})}>Çıkış</button>
+                            )}
                         </div>
-                    </div>
+                    </nav>
 
-                    <div className="main-container">
-                        <div className="sidebar">
-                            <div className="search-box">
-                                <input 
-                                    type="text" 
-                                    placeholder="Ocak ismi ile ara..." 
-                                    onChange={(e) => setSearch(e.target.value)}
-                                />
+                    <div className="content">
+                        <aside className="sidebar">
+                            <div className="list-header">
+                                <input type="text" placeholder="Ocaklarda ara..." style={{width:'100%', padding:'10px', borderRadius:'8px', border:'1px solid #dadce0'}} />
                             </div>
-                            <div className="ocak-list">
-                                {filteredOcaklar.map(o => (
-                                    <div 
-                                        key={o.id} 
-                                        className={`ocak-item ${selected?.id === o.id ? 'active' : ''}`}
-                                        onClick={() => setSelected(o)}
-                                    >
-                                        <div style={{fontWeight:'bold', color:'#1a73e8'}}>{o.name}</div>
-                                        <div style={{fontSize:'12px', color:'#5f6368', marginTop:'4px'}}>
-                                            Mevki: {o.detay.split('-')[0]}
+                            <div style={{flex:1, overflowY:'auto'}}>
+                                {ocaklar.map(o => (
+                                    <div key={o.id} 
+                                         className={`ocak-item ${selectedOcak?.id === o.id ? 'active' : ''}`}
+                                         onClick={() => setSelectedOcak(o)}>
+                                        <div style={{fontWeight:600, color:'#202124'}}>{o.name}</div>
+                                        <div style={{fontSize:'12px', color:'#70757a', marginTop:'4px'}}>
+                                            📍 {o.lat.toFixed(3)}, {o.lng.toFixed(3)}
+                                            {currentUser.role === 'GUEST' && <span className="lock-icon">🔒 Detaylar Kilitli</span>}
                                         </div>
                                     </div>
                                 ))}
                             </div>
-                        </div>
+                            {currentUser.role === 'ADMIN' && (
+                                <div style={{padding:'15px', borderTop:'1px solid #eee'}}>
+                                    <button className="btn btn-admin" style={{width:'100%'}}>+ Yeni Kullanıcı / Ocak Ekle</button>
+                                </div>
+                            )}
+                        </aside>
 
-                        <div className="map-view">
+                        <main className="main-view">
                             <iframe 
-                                src={selected ? 
-                                    `https://maps.google.com/maps?q=${selected.lat},${selected.lng}&z=15&output=embed` : 
-                                    `https://maps.google.com/maps?q=38.4,40.5&z=8&output=embed`}
+                                src={selectedOcak ? 
+                                    `https://www.google.com/maps/embed/v1/view?key=YOUR_API_KEY&center=${selectedOcak.lat},${selectedOcak.lng}&zoom=15&maptype=satellite` : 
+                                    `https://www.google.com/maps/embed/v1/view?key=YOUR_API_KEY&center=38.5,40.5&zoom=8`}
                                 width="100%" height="100%" style={{border:0}} allowFullScreen>
                             </iframe>
 
-                            {selected && (
-                                <div className="details-panel">
-                                    <div>
-                                        <h3 style={{margin:'0 0 5px 0', color:'#202124'}}>{selected.name}</h3>
-                                        <p style={{margin:0, fontSize:'14px', color:'#5f6368'}}>{selected.detay}</p>
-                                        <p style={{margin:'5px 0 0 0', fontSize:'12px', color:'#1a73e8'}}>Koordinat: {selected.lat}, {selected.lng}</p>
-                                    </div>
-                                    <div style={{display:'flex', gap:'10px'}}>
-                                        <button 
-                                            className="btn btn-primary" 
-                                            onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${selected.lat},${selected.lng}`)}
-                                        >
+                            {selectedOcak && (
+                                <div className="detail-overlay">
+                                    <h3 style={{margin:'0 0 10px 0', fontSize:'18px'}}>{selectedOcak.name}</h3>
+                                    
+                                    <div className={currentUser.role === 'GUEST' ? 'restricted' : ''}>
+                                        <div style={{background:'#f8f9fa', padding:'10px', borderRadius:'8px', fontSize:'13px'}}>
+                                            <strong>Saha Sorumlusu:</strong> {selectedOcak.secret.yetkili}
+                                        </div>
+                                        <div className="info-grid">
+                                            <div className="info-label">Ruhsat No:</div>
+                                            <div>{selectedOcak.secret.ruhsat}</div>
+                                            <div className="info-label">Kapasite:</div>
+                                            <div>{selectedOcak.secret.kapasite}</div>
+                                            <div className="info-label">Bitiş Tarihi:</div>
+                                            <div>{selectedOcak.secret.bitis}</div>
+                                        </div>
+                                        <button className="btn btn-login" style={{width:'100%', marginTop:'15px'}} 
+                                                onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${selectedOcak.lat},${selectedOcak.lng}`)}>
                                             Yol Tarifi Al
                                         </button>
-                                        {role === 'ADMIN' && <button className="btn" style={{background:'#ea4335', color:'white'}}>Sil</button>}
                                     </div>
+
+                                    {currentUser.role === 'GUEST' && (
+                                        <div style={{marginTop:'15px', textAlign:'center', color:'#d93025', fontSize:'12px', fontWeight:'bold'}}>
+                                            ⚠️ Teknik verileri görmek için giriş yapmalısınız.
+                                        </div>
+                                    )}
                                 </div>
                             )}
-                        </div>
+                        </main>
                     </div>
                 </div>
             );
